@@ -1,0 +1,19 @@
+g++ -o central central.cc -std=c++11
+./central
+
+g++ -o clientA clientA.cc -std=c++11
+./clientA Victor
+
+crtl+d: exit
+
+g++ -o central central.cc -std=c++11
+g++ -o clientA clientA.cc -std=c++11
+g++ -o clientB clientB.cc -std=c++11
+g++ -o serverT serverT.cc -std=c++11
+g++ -o serverS serverS.cc -std=c++11
+
+
+1. priority_queue
+2. unordered_map 
+(map: operator[] O(logn);
+unordered_map: operator O(1)

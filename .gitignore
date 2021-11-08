@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Some files, not upload
+test_general.cc
+test_general2.cc
+test_of_serverP.cc
+test_of_serverS.cc
+test_of_serverT.cc
+README.txt

@@ -1,0 +1,12 @@
+Alice 10
+Ben 5
+Dick 27
+Cici 6
+Eva 9
+Frank 17
+Rachael 43
+King 3
+Oliver 94
+Victor 8
+Rachit 129
+Hanieh 49
