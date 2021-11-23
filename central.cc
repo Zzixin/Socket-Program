@@ -120,7 +120,7 @@ int main(){
     int newfd_clientA, newfd_clientB; //child socket of clients
     int recvfdA, recvfdB, recvfdT, recvfdS, recvfdP; //receiver descriptor
     int sendT; // send descriptor
-    char inputA[512], inputB[512], inputT[Bufferlen], inputS[Bufferlen], inputP[Bufferlen];
+    char inputA[512], inputB[512], input_graph[4096], input_name[2048], inputP[Bufferlen];
     
     int tcp_socket_A = Bootup_TCP(Central_port_TCPA); //A
     int tcp_socket_B = Bootup_TCP(Central_port_TCPB); //B
@@ -194,13 +194,19 @@ int main(){
 
         /*------------------receive msg from serverT------------------*/
         sin_size = sizeof server_addr;
-        recvfdT = recvfrom(udp_socket, inputT, Bufferlen-1 , 0, (struct sockaddr *)&server_addr, &sin_size);
+        recvfdT = recvfrom(udp_socket, input_name, sizeof input_name, 0, (struct sockaddr *)&server_addr, &sin_size);
+        if (recvfdT == -1){
+            perror("recvfrom serverT");
+            exit (1);
+        }
+        recvfdT = recvfrom(udp_socket, input_graph, sizeof input_graph, 0, (struct sockaddr *)&server_addr, &sin_size);
         if (recvfdT == -1){
             perror("recvfrom serverT");
             exit (1);
         }
         printf("The Central server received information from Backend-Server %s using UDP over port %s.\n", "T", Central_port_UDP);
-        //inputT: "King Rachael Victor $Oliver Rachael $Rachael King Oliver Victor $Victor King Rachael $12$"
+        //input_name: "Rachael Victor King Oliver" index即为对应的integer
+        //input_graph: "$0 1$0 2$0 3$1 2$0$"
         //msg from serverT: edgemap(connected graph), and a flag(about whether inputA has connections with inputB)
     
 
@@ -209,7 +215,7 @@ int main(){
         addr_serverS.sin_family = AF_INET;
         addr_serverS.sin_addr.s_addr = inet_addr(LocalHost);
         addr_serverS.sin_port = htons(22819); //serverS port
-        sendT = sendto(udp_socket, inputT, sizeof inputT, 0, (struct sockaddr *)&addr_serverS, sizeof(addr_serverS));
+        sendT = sendto(udp_socket, input_name, sizeof input_name, 0, (struct sockaddr *)&addr_serverS, sizeof(addr_serverS));
         if (sendT == -1){
             perror("serverC to serverS: sendto");
             exit(1);
@@ -219,13 +225,14 @@ int main(){
 
         /*------------------receive msg from serverS------------------*/
         sin_size = sizeof server_addr;
-        recvfdT = recvfrom(udp_socket, inputS, Bufferlen-1 , 0, (struct sockaddr *)&server_addr, &sin_size);
+        strcpy(input_name, "");
+        recvfdT = recvfrom(udp_socket, input_name, sizeof input_name, 0, (struct sockaddr *)&server_addr, &sin_size);
         if (recvfdT == -1){
             perror("recvfrom serverS");
             exit (1);
         }
         printf("The Central server received information from Backend-Server %s using UDP over port %s.\n", "S", Central_port_UDP);
-        //inputS="King 3#Oliver 94#Rachael 43#Victor 8#"
+        //inputS="Rachael 43#Victor 8#King 3#Oliver 94#"
         //msg from servers: the scores of the nodes
 
 
@@ -234,13 +241,17 @@ int main(){
         addr_serverP.sin_family = AF_INET;
         addr_serverP.sin_addr.s_addr = inet_addr(LocalHost);
         addr_serverP.sin_port = htons(23819); //serverP port
-        if (strlen(inputT) != 0){ //if =0, means there's no connection
-            strcat(inputT, inputS); // Connect the string S to the string T. the result is filled in the serverT
-            strcat(inputT,"$");
-            strcat(inputT,inputA); //last words in inputT are the inputs from clients
+        if (strlen(input_name) != 0){ //if =0, means there's no connection
+            strcat(input_name, "$"); // Connect the string S to the string T. the result is filled in the serverT
+            strcat(input_name,inputA); //last words in inputT are the inputs from clients
         }
-        //inputT="King Rachael Victor $Oliver Rachael $Rachael King Oliver Victor $Victor King Rachael $12$King 3#Oliver 94#Rachael 43#Victor 8#$Victor Oliver King"
-        sendT = sendto(udp_socket, inputT, sizeof inputT, 0, (struct sockaddr *)&addr_serverP, sizeof(addr_serverP));
+        //input_name="King 3#Victor 8#Oliver 94#Rachael 43#$Victor Oliver King"
+        sendT = sendto(udp_socket, input_name, sizeof input_name, 0, (struct sockaddr *)&addr_serverP, sizeof(addr_serverP));
+        if (sendT == -1){
+            perror("serverC to serverP: sendto");
+            exit(1);
+        }
+        sendT = sendto(udp_socket, input_graph, sizeof input_graph, 0, (struct sockaddr *)&addr_serverP, sizeof(addr_serverP));
         if (sendT == -1){
             perror("serverC to serverP: sendto");
             exit(1);
@@ -250,7 +261,7 @@ int main(){
 
         /*------------------receive msg from serverP------------------*/
         sin_size = sizeof server_addr;
-        recvfdT = recvfrom(udp_socket, inputP, Bufferlen-1 , 0, (struct sockaddr *)&server_addr, &sin_size);
+        recvfdT = recvfrom(udp_socket, inputP, sizeof inputP, 0, (struct sockaddr *)&server_addr, &sin_size);
         if (recvfdT == -1){
             perror("recvfrom serverP");
             exit (1);

@@ -43,33 +43,12 @@ int Bootup_UDP(){
 }
 
 //input: "King Rachael Victor $Oliver Rachael $Rachael King Oliver Victor $Victor King Rachael $ 12"
-void convert_string_to_map(string &input, unordered_map<string, set<string> > &edgemap){
+void convert_string_to_map(string &input, vector<string> &connected_graph){
     //split the input into vector<string>. each string contains several nodes
     stringstream ss(input);
-    vector<string> p{};
     string temp;
-    while(std::getline(ss, temp, '$')){
-        p.push_back(temp);
-    }
-
-    p.pop_back(); //delete the last element
-
-    //split vector<string> into vector<vector<string>>. separate the nodes
-    vector<vector<string> > edgemap_helper;
-    for (auto i:p){
-        stringstream sst(i);
-        vector<string> pp{};
-        while (std::getline(sst, temp, ' ')){
-            pp.push_back(temp);
-        }
-        edgemap_helper.push_back(pp);
-    }
-
-    //convert vector to the map, edgemap
-    for (auto i:edgemap_helper){
-        for (int j=1; j<i.size();j++){
-            edgemap[i[0]].insert(i[j]);
-        }
+    while(std::getline(ss, temp, ' ')){
+        connected_graph.push_back(temp);
     }
 }
 
@@ -101,29 +80,25 @@ void getdata(unordered_map<string, string> &score_map){
 }
 
 //get the scores of nodes need (filter the score map)
-void get_scores(unordered_map<string, string> &score_map, unordered_map<string, set<string> > &edgemap){
-    for (auto iter=score_map.cbegin(); iter!=score_map.cend(); iter++){
-        //it = edgemap.find((*iter).first);
-        if (edgemap.find((*iter).first) == edgemap.end()){
-            score_map.erase((*iter).first);
-        }
+void get_scores(unordered_map<string, string> &score_map, vector<string> &connected_graph, vector<vector<string> > &result){
+    for (auto vec:connected_graph){
+        result.push_back({vec, score_map[vec]});        
     }
 }
 
 //conver the scoremap(map) to string(output to central server)
-void convert_map_to_string(unordered_map<string, string> &score_map, string &output){
-    string temp;
-    for (auto iter=score_map.cbegin(); iter!=score_map.cend(); iter++){
-        output += (*iter).first;
+void convert_map_to_string(vector<vector<string> > &result, string &output){
+    for (auto vec:result){
+        output += vec[0];
         output += " ";
-        output += (*iter).second;
+        output += vec[1];
         output += "#";
     }
 }
 
 int main(void){
     //UDP
-    char inputS[Bufferlen], outputS[Bufferlen];
+    char inputS[2048], outputS[2048];
     struct sockaddr_storage their_addr;
 	socklen_t addr_len;
     int recvfd, sendfd; //receive/send descriptor
@@ -133,7 +108,7 @@ int main(void){
     while (1){
         //receive the message from central server
         addr_len = sizeof their_addr;
-        if ((recvfd = recvfrom(sockfd, inputS, Bufferlen-1 , 0,
+        if ((recvfd = recvfrom(sockfd, inputS, sizeof inputS, 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 			perror("serverS recvfrom serverC");
 			exit(1);
@@ -145,14 +120,15 @@ int main(void){
         //get the socre map of the needed nodes
         if (strlen(inputS)==0) {strcpy(outputS,"");}
         else{
-            unordered_map<string, set<string> > edgemap;
+            vector<string> connected_graph;
             unordered_map<string, string> score_map;
+            vector<vector<string>> result;
             string input = inputS, output;
 
-            convert_string_to_map(input, edgemap);//convert input to edgemap
+            convert_string_to_map(input, connected_graph);//convert input to edgemap
             getdata(score_map); // get the general score map
-            get_scores(score_map, edgemap); //filter the score map
-            convert_map_to_string(score_map, output);
+            get_scores(score_map, connected_graph, result); //filter the score map
+            convert_map_to_string(result, output);
             strcpy(outputS,output.c_str());
         }
         
