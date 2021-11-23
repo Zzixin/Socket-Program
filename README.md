@@ -2,23 +2,24 @@
 This is a simple socket program project of USC-EE450, including two clients, a central server, and three processing servers.
 
 
-c. I have successfully completed the optional part and all the requirements of the project.
- - In phase1, I established the connections between Server C and the Clients as well as all other servers(T, S, P). The server and client programs boot up and the clients can send usernames to the server C.
- - In phase2, server C send the received data to server T to get the connected graph, send the graph to server S to get the scores, and then send the graph and scores to server P to get the network path.
- - In phase3, server C receive the network path from server P and send it to client A and client B. Finally client A and B show the path received on the screen. 
- - In phase4, client B can provide two usernames and the system can compare both usernames with client A username and show the message on the screen.
+c. I have successfully completed all the requirements of the project and the optional part. Whether the input of clientB are one username or two usernames, the servers can successfully processed the network and print the correct answers.
 
 
 d. Code files:
  - share.h: This is the head file of all the programs, including the head files needed in this project.
 
- - central.cc: This is the central server. It receives usernames from clients, sends the data to server T, server S, and server P, and then it will receiver the information(graph, scores, results) from these three servers. After receiving result from server P, it will send to two clients.
+ - central.cc: This is the central server. 
+	Firstly, It receives usernames from clients and sends usernames to serverT.
+	Secondly, from serverT, it receives "input_name" char array which contains the names of connected nodes and "input_graph" char array which contains the connected graph. The nodes of connected graph are in integers, the index of string in "input_name" corresponds to the integer in "input_graph".
+	Then it sends "input_name" char array to serverS and get the username-score char array. The order of the array won't change.
+	After that, it sends username-score and "input_graph" to serverP to get the path.
+	Finally, it sends the results received from serverP to two clients.
 
- - serverT.cc: This is the Topology server. It reads edgelist.txt, receives usernames from central server, finds the connected graph between users and sends the graph back to central server. If there is no connection between users, server T will send "null".
+ - serverT.cc: This is the Topology server. It reads edgelist.txt, receives usernames from central server, finds the connected graph between users and sends the names of connected nodes and the graph back to central server. If there is no connection between users, server T will send "null".
 
- - serverS.cc: This is the Score server. It reads scores.txt, receives graph data from central server and sends scores of users back. If graph is null, then it will send "null".
+ - serverS.cc: This is the Score server. It reads scores.txt, receives the data of names from central server and sends username-score data back. If graph is null, then it will send "null".
 
- - serverP.cc: This is the Processing server. It received graph, score, username data from central server and sends the network path with the smallest matching gap back. If graph and score data is null, serverP will realize there is no connection.
+ - serverP.cc: This is the Processing server. It received graph and username-score data from central server and sends the network path with the smallest matching gap back. If graph and score data is null, serverP will realize there is no connection.
 
  - clientA.cc: This is the client A. It can receive one username and send it to central server. After receiving the network path, it will show it on the screen.
 
@@ -67,29 +68,41 @@ e. I mainly use std::string to deal with the data in the program.
 	The ServerP received the topology and score information.
 	The ServerP finished sending the results to the Central.
 
-   7) ./clientA <username1>
+   7) ./clientA Victor
 	The client is up and running.
 	The client sent Victor to the Central server.
 	Found compatibility for 'Victor' and 'Oliver':
 	Victor---Rachael---Oliver
 	Matching Gap: 1.06
 
-   8) ./clientB <username2>
+   8) ./clientB Oliver
 	The client is up and running.
 	The client sent Oliver to the Central server.
 	Found compatibility for 'Oliver' and 'Victor':
 	Oliver---Rachael---Victor
 	Matching Gap: 1.06
 
-   9) ./clientB <username2> <username3>
+---optional part (extra points)---
+
+   9) ./clientA Victor
 	The client is up and running.
-	The client sent Oliver and Rachael to the Central server.
+	The client sent Victor to the Central server.
+	Found compatibility for 'Victor' and 'Oliver':
+	Victor---Rachael---Oliver
+	Matching Gap: 1.06
+	Found compatibility for 'Victor' and 'King':
+	Victor---King
+	Matching Gap: 0.45
+
+   9) ./clientB Oliver King
+	The client is up and running.
+	The client sent Oliver and King to the Central server.
 	Found compatibility for 'Oliver' and 'Victor':
 	Oliver---Rachael---Victor
 	Matching Gap: 1.06
-	Found compatibility for 'Rachael' and 'Victor':
-	Rachael---Victor
-	Matching Gap: 0.69
+	Found compatibility for 'King' and 'Victor':
+	King---Victor
+	Matching Gap: 0.45
 
 
 g. I haven't noticed any idiosyncrasy yet.
